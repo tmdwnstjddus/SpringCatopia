@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.catwebsite.mapper.ReviewMapper">
+	
+	<select id="selectReviews" resultType="com.catwebsite.vo.Review">
+		SELECT reviewNo, category, title, uploader, regDate
+		FROM REVIEW
+		WHERE deleted = '0' 
+		ORDER BY reviewNo DESC
+	</select>
+	
+	<select id="selectReviewlist" parameterType="hashmap" resultType="com.catwebsite.vo.Review">
+		SELECT reviewNo, category, title, uploader, regDate
+		FROM REVIEW
+		WHERE deleted = '0'		
+		<if test='category != "all"'>
+    		AND  category = #{category}
+  		</if>
+		ORDER BY reviewNo DESC
+	</select>
+	
+	<select id="selectReviewByReviewNo" 
+		parameterType="int" resultType="com.catwebsite.vo.Review">
+		SELECT reviewNo, category, title, uploader, regDate, readCount, content
+		FROM REVIEW
+		WHERE reviewNo = #{ reviewNo } AND DELETED = '0'
+	</select>
+	
+	<select id="selectReviewFilesByReviewNo"
+		parameterType="int" resultType="com.catwebsite.vo.ReviewFile">
+		SELECT reviewFileNo, reviewNo, savedFileName, userFileName
+		FROM REVIEWFILE
+		WHERE reviewNo = #{ reviewNo }
+	</select>
+	
+	<select id="selectReviewFileByReviewFileNo"
+		parameterType="int" resultType="com.catwebsite.vo.ReviewFile">
+		SELECT reviewFileNo, reviewNo, savedFileName, userFileName
+		FROM REVIEWFILE
+		WHERE reviewFILENO = #{ resumeFileNo }
+	</select>
+	
+	<!-- **************************************************** -->
+	
+	<!-- insert가 완료된 후 keyColumn(resumeNo)의 값을 vo의 keyProperty(resumeNo)에 저장 -->
+	<insert id="insertReview" parameterType="com.catwebsite.vo.Review"
+			useGeneratedKeys="true" keyColumn="reviewNo" keyProperty="reviewNo">
+		INSERT INTO REVIEW (reviewNo, category, title, uploader, content)
+		VALUES (REVIEW_SEQUENCE.NEXTVAL, #{ category }, #{ title }, #{ uploader }, #{ content })
+	</insert>
+	
+	<!-- insert가 완료된 후 selectKey의 SQL을 실행해서 vo의 resumeNo에 값을 저장 -->
+	<insert id="insertReview2" parameterType="com.catwebsite.vo.Review">
+		<selectKey keyProperty="reviewNo" order="AFTER" resultType="int">
+			SELECT RESUME_SEQUENCE.CURRVAL FROM DUAL
+		</selectKey>
+		INSERT INTO REVIEW (reviewNo, category, title, uploader, content)
+		VALUES (REVIEW_SEQUENCE.NEXTVAL, #{ category }, #{ title }, #{ uploader }, #{ content })
+	</insert>
+	
+	<insert id="insertReviewFile" parameterType="com.catwebsite.vo.ReviewFile">
+		INSERT INTO REVIEWFILE (
+			REVIEWFILENO
+			, reviewNo
+			, savedFileName
+			, userFileName
+		)
+		VALUES (
+			REVIEWFILE_SEQUENCE.NEXTVAL
+			, #{ reviewNo }
+			, #{ savedFileName }
+			, #{ userFileName }
+		)
+	</insert>
+	
+	<update id="deleteReview" parameterType="int">
+		UPDATE REVIEW
+		SET DELETED = '1'
+		WHERE reviewNo = #{ reviewNo }
+	</update>
+	
+	<update id="updateCount" parameterType="int">
+		UPDATE REVIEW
+		SET READCOUNT = READCOUNT+1
+		WHERE reviewNo = #{ reviewNo }
+	</update>
+	
+	
+	<delete id="deleteReviewFile" parameterType="int">
+		DELETE FROM REVIEWFILE
+		WHERE REVIEWFILENO = #{ REVIEWFileNo }
+	</delete>
+	
+	<update id="updateReview" parameterType="com.catwebsite.vo.Review">
+		UPDATE REVIEW
+		SET CATEGORY =  #{ category }, title = #{ title }, content = #{ content }
+		WHERE reviewNo = #{ reviewNo }
+	</update>
+	
+	<!-- comment -->
+	
+	<insert id="insertComment" parameterType="ReviewComment">
+		INSERT INTO REVIEWCOMMENT
+		(
+			COMMENTNO, 
+			REVIEWNO, 
+			WRITER, 
+			CONTENT, 
+			GROUPNO, 
+			STEP, 
+			DEPTH
+		)
+		VALUES
+		(
+			REVIEWCOMMENT_SEQUENCE.NEXTVAL, 
+			#{ reviewNo }, 
+			#{ writer }, 
+			#{ content },
+			REVIEWCOMMENT_SEQUENCE.CURRVAL,
+			1,
+			0
+		)	
+	</insert>
+	
+	<update id="updateComment" parameterType="ReviewComment">
+		UPDATE REVIEWCOMMENT
+		SET CONTENT = #{ content }
+		WHERE COMMENTNO = #{ commentNo }
+	</update>
+	
+	<delete id="deleteComment" parameterType="int">
+		DELETE FROM REVIEWCOMMENT			
+		WHERE COMMENTNO = #{ commentNo }
+	</delete>
+	
+	<select id="selectCommentsByReviewNo" 
+		parameterType="int" resultType="ReviewComment">
+		SELECT COMMENTNO, REVIEWNO, WRITER, REGDATE, CONTENT, GROUPNO, STEP, DEPTH 
+		FROM REVIEWCOMMENT 
+		WHERE REVIEWNO = #{ reviewNo } ORDER BY GROUPNO DESC, STEP ASC 
+	</select>
+	
+	<select id="selectCommentByCommentNo" 
+		parameterType="int" resultType="ReviewComment">
+		SELECT COMMENTNO, REVIEWNO, WRITER, CONTENT, REGDATE, GROUPNO, STEP, DEPTH 
+		FROM REVIEWCOMMENT 
+		WHERE COMMENTNO = #{ reviewNo }
+	</select>
+	
+	<update id="updateCommentStep" parameterType="ReviewComment">
+		UPDATE REVIEWCOMMENT
+		SET STEP = STEP + 1
+		WHERE GROUPNO = #{ groupNo } AND STEP <![CDATA[>]]> #{ step }
+	</update>
+	
+	<insert id="insertRecomment" parameterType="ReviewComment">
+		INSERT INTO REVIEWCOMMENT
+		(
+			COMMENTNO, 
+			REVIEWNO, 
+			WRITER, 
+			CONTENT, 
+			GROUPNO, 
+			STEP, 
+			DEPTH
+		)
+		VALUES
+		(
+			REVIEWCOMMENT_SEQUENCE.NEXTVAL, 
+			#{ reviewNo },
+			#{ writer },
+			#{ content },
+			#{ groupNo },
+			#{ step },
+			#{ depth }
+		)	
+	</insert>
+	
+	
+	
+</mapper>

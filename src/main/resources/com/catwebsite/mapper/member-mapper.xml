@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.catwebsite.mapper.MemberMapper">
+
+	<select id="selectMemberByIdAndPasswd"
+		parameterType="hashmap" resultType="Member">
+		SELECT memberId, name, gender, email, userType, regDate
+		FROM MEMBER
+		WHERE MEMBERID = #{ memberId } AND PASSWD = #{ passwd }
+	</select>
+	
+	<insert id="insertMember" parameterType="Member">
+		INSERT INTO MEMBER (MEMBERID, NAME, GENDER, PASSWD, EMAIL, PHONE) 
+		VALUES (#{ memberId }, #{ name }, #{ gender }, #{ passwd }, #{ email },  #{ phone })
+	</insert>
+	
+	<select id="getList" resultType="Member">
+		SELECT MEMBERID, NAME, GENDER, EMAIL, PHONE, USERTYPE, REGDATE
+		FROM MEMBER
+	</select>
+	
+	<select id="getMemberById" resultType="Member">
+		SELECT MEMBERID, NAME, GENDER, EMAIL, PHONE, USERTYPE, REGDATE
+		FROM MEMBER
+		WHERE MEMBERID = #{memberId}
+	</select>
+	
+	<update id="UpdateMember" parameterType="Member">
+		UPDATE MEMBER
+		SET PASSWD = #{passwd}, EMAIL = #{email}, PHONE = #{phone}
+		WHERE MEMBERID = #{memberId}
+	</update>
+	
+	<update id="setType" parameterType="Member">
+		UPDATE MEMBER
+		SET USERTYPE = #{userType}
+		WHERE MEMBERID = #{memberId}
+	</update>
+</mapper>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.catwebsite.mapper.CartMapper">
+	<!--주문 넣기  -->
+	<insert id="insertCart" parameterType="Cart">
+		INSERT INTO CART(orderId, memberId, productNo, amount)
+		VALUES(seq_cart.NEXTVAL, #{memberId}, #{productNo}, #{amount})
+	</insert>
+	<!--  리스트보기-->
+	<select id="selectCartsByMemberId" resultType="Cart">
+		SELECT 
+			c.orderId AS orderId,
+			c.memberId AS memberId,
+			p.productNo AS productNo,
+			m.name AS userName,
+			p.name AS productName,
+			c.amount,
+			p.price AS productPrice,
+			(price* amount) money
+		FROM MEMBER m, PRODUCT p, CART c
+		WHERE m.memberId = c.memberId
+			AND p.productNo = c.productNo
+			AND c.memberId = #{memberId}
+		ORDER BY c.orderId
+	</select>
+	<!--장바구니 전체금액  -->
+	<select id="sumMoney" resultType="int">
+		SELECT NVL(SUM(price * amount), 0) money
+		FROM CART c, PRODUCT p
+		WHERE c.productNo = p.productNo AND c.memberId = #{memberId}
+	</select>
+	<!--장바구니에서 삭제  -->
+	<delete id="deleteCart">
+		DELETE FROM CART
+		WHERE orderId = #{orderId}
+	</delete>
+	<!-- 장바구니 상품레코드확인 -->
+	<select id="selectMap" resultType="int">
+		SELECT COUNT(*)
+		FROM CART
+		WHERE memberId = #{memberId}
+		AND productNo = #{productNo}
+	</select>
+	<!-- 장바구니 동일상품 존재시 수정 -->
+	<update id="sumCart">
+		UPDATE CART
+		SET amount = amount + #{amount}
+		WHERE memberId = #{memberId}
+		AND productNo = #{productNo}
+	</update>
+	<!--장바구니 수정  -->
+	<update id="modifyCart">
+		UPDATE CART
+		SET amount = #{amount}
+		WHERE memberId = #{memberId}
+		AND productNo = #{productNo}
+	</update>
+</mapper>

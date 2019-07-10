@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.catwebsite.mapper.CatMapper">
+
+
+
+   <select id="kindCategory" parameterType="hashmap" resultType="Cat">
+      SELECT CATNO, CATNAME, CATRACE, CATGENDER, CATAGE, REGDATE, CATCONTENT, CATCOUNT, UPLOADER, READCOUNT
+      FROM Cat
+      WHERE deleted = '0'   
+      <if test='catGender != "all"'>
+          AND CATGENDER = #{ catGender }
+        </if>
+      ORDER BY catNo DESC
+   </select>   
+
+   
+   <select id="findUploadByUploadNo" 
+      parameterType="int" resultType="Cat">
+      SELECT CATNO, CATNAME, CATRACE, CATGENDER, CATAGE, REGDATE, CATCONTENT, CATCOUNT, UPLOADER, READCOUNT 
+      FROM CAT
+      WHERE CATNO = #{ catNo } AND DELETED = '0'
+   </select>
+   
+   <select id="findUploadFilesByUploadNo"
+      parameterType="int" resultType="CatImg">
+      SELECT CATIMGNO, CATNO, SAVEDIMGNAME, USERIMGNAME
+      FROM CATIMAGE
+      WHERE CATNO = #{ catNo }
+   </select>
+   
+   <select id="findUploadFileByUploadNo"
+      parameterType="int" resultType="CatImg">
+      SELECT CATIMGNO, CATNO, SAVEDIMGNAME, USERIMGNAME
+      FROM CATIMAGE
+      WHERE CATNO = #{ catNo }
+      and rownum = 1
+   </select>
+   
+   <select id="findUploadFileByUploadFileNo"
+      parameterType="int" resultType="CatImg">
+      SELECT CATIMGNO, CATNO, SAVEDIMGNAME, USERIMGNAME
+      FROM CATIMAGE
+      WHERE CATIMGNO = #{ catImgNo }
+   </select>  
+   
+   <!-- searchList -->
+<select id="listCat" parameterType="hashmap" resultType="Cat">
+      select CATNO, CATNAME, CATRACE, CATGENDER, CATAGE, REGDATE, CATCONTENT, CATCOUNT, UPLOADER, READCOUNT
+      from CAT
+      where deleted = '0'
+       <if test="word != ''">
+            <choose>
+               <when test="col == 'all'">
+                  and ( catRace like '%'||#{ catRace }||'%' or catAge like '%'||#{ catAge }||'%' or catGender like '%'||#{ catGender }||'%' )
+               </when>
+               <when test="col == 'catRace'">
+                  and catRace like '%'||#{ word }||'%'
+               </when>
+                <when test="col == 'catAge'">
+                  and catAge like '%'||#{ word }||'%'
+               </when>              
+               <when test="col == 'catGender'">
+                  and catGender like '%'||#{ word }||'%'
+               </when>
+            </choose>
+         </if>
+       order by catNo DESC
+   </select>
+   
+   <!-- listpage -->
+    <select id="listPage" resultType="Cat"
+   parameterType="com.catwebsite.vo.CatCriteria">
+       select CATNO, CATNAME, CATRACE, CATGENDER, CATAGE, REGDATE, CATCONTENT, CATCOUNT, UPLOADER, READCOUNT
+      from (
+         select CATNO, CATNAME, CATRACE, CATGENDER, CATAGE, REGDATE, CATCONTENT, CATCOUNT, UPLOADER, READCOUNT,
+         row_number() over(order by CATNO DESC) as rNum
+         from CAT
+         where DELETED = '0'
+      ) CATPAGE
+      where rNum between #{ rowStart }  and #{ rowEnd }
+      order by CATNO DESC
+   </select> 
+   
+   <select id="listCount" resultType="int">
+   <![CDATA[
+      SELECT count(CATNO)
+      FROM CAT
+      WHERE CATNO > 0
+   ]]>
+   
+   </select>
+   
+   
+   <!-- **************************************************** -->
+   
+   <!-- insert가 완료된 후 keyColumn(catNo)의 값을 vo의 keyProperty(catNo)에 저장 -->
+   <insert id="insertCat" parameterType="Cat"
+         useGeneratedKeys="true" keyColumn="catNo" keyProperty="catNo">
+      INSERT INTO CAT (CATNO, CATNAME, CATRACE, CATGENDER, CATAGE, CATCONTENT, UPLOADER)
+      VALUES (CAT_SEQUENCE.NEXTVAL, #{ catName }, #{ catRace }, #{ catGender }, #{ catAge }, #{ catContent }, #{ uploader })
+   </insert>
+   
+   <insert id="insertCatImg" parameterType="CatImg">
+      INSERT INTO CATIMAGE (
+         CATIMGNO
+         , CATNO
+         , SAVEDIMGNAME
+         , USERIMGNAME
+      )
+      VALUES (
+         CATIMAGE_SEQUENCE.NEXTVAL
+         , #{ catNo }
+         , #{ savedImgName }
+         , #{ userImgName }
+      )
+   </insert>
+   
+   
+   <update id="updateCount" parameterType="int">
+      UPDATE CAT 
+      SET READCOUNT = READCOUNT+1
+      WHERE CATNO = #{ catNo }
+   </update>
+   
+   
+   <update id="deleteCat" parameterType="int">
+      UPDATE CAT 
+      SET DELETED = '1'
+      WHERE CATNO = #{ catNo }
+   </update>
+   
+   <update id="updateCat" parameterType="Cat">
+      UPDATE CAT
+      SET CATNAME = #{ catName }, CATRACE = #{ catRace }, CATAGE = #{ catAge }, CATGENDER = #{ catGender }, CATCONTENT =#{ catContent }
+      WHERE CATNO = #{ catNo }
+   </update> 
+    
+   <delete id="deleteCatImg" parameterType="int">
+      DELETE FROM CATIMAGE
+      WHERE CATIMGNO = #{ catImgNo }
+   </delete>
+
+   
+   
+</mapper>

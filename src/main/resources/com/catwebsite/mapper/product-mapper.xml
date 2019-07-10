@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.catwebsite.mapper.ProductMapper">
+
+    <select id="listPage" resultType="Product"
+   parameterType="com.catwebsite.vo.ProductCriteria">
+		SELECT PRODUCTNO, NAME, UPLOADER, REGDATE, CONTENT, PRICE, KIND
+      from (
+		SELECT PRODUCTNO, NAME, UPLOADER, REGDATE, CONTENT, PRICE, KIND,
+         row_number() over(order by PRODUCTNO DESC) as rNum
+         from PRODUCT
+         where DELETED = '0'
+      ) PRODUCTPAGE
+      where rNum between #{ rowStart }  and #{ rowEnd }
+      order by PRODUCTNO DESC
+   </select> 
+   
+  <select id="listCount" resultType="int">
+   <![CDATA[
+      SELECT count(PRODUCTNO)
+      FROM PRODUCT
+      WHERE PRODUCTNO > 0
+   ]]>
+   
+   </select>   
+
+
+	<select id="kindCategorys" parameterType="hashmap" resultType="Product">
+		SELECT PRODUCTNO, NAME, UPLOADER, REGDATE, CONTENT, PRICE, KIND
+		FROM PRODUCT
+		WHERE deleted = '0'	
+		<if test='kind != "all"'>
+    		AND KIND = #{ kind }
+  		</if>
+		ORDER BY productNo DESC
+	</select>	
+
+	<select id="findUploadByUploadNo" 
+		parameterType="int" resultType="Product">
+		SELECT PRODUCTNO, NAME, UPLOADER, REGDATE, CONTENT, PRICE, KIND
+		FROM PRODUCT
+		WHERE PRODUCTNO = #{ productNo } AND DELETED = '0'
+	</select>	
+	
+	<select id="findUploadFilesByUploadNo"
+		parameterType="int" resultType="ProductImg">
+		SELECT PRODUCTIMGNO, PRODUCTNO, SAVEDFILENAME, USERFILENAME
+		FROM PRODUCTIMG
+		WHERE PRODUCTNO = #{ productNo }
+	</select>
+	
+	<select id="findUploadFileByUploadFileNo"
+		parameterType="int" resultType="ProductImg">
+		SELECT PRODUCTIMGNO, PRODUCTNO, SAVEDFILENAME, USERFILENAME
+		FROM PRODUCTIMG
+		WHERE PRODUCTIMGNO = #{ productImgNo }
+	</select> 
+	
+	<select id="findUploadFileByUploadNo"
+		parameterType="int" resultType="ProductImg">
+		SELECT PRODUCTIMGNO, PRODUCTNO, SAVEDFILENAME, USERFILENAME
+		FROM PRODUCTIMG
+		WHERE PRODUCTNO = #{ productNo }
+		and rownum = 1
+	</select>
+	
+	<!-- search -->
+<select id="listProduct" parameterType="hashmap" resultType="Product" >
+      select PRODUCTNO, NAME, PRICE, UPLOADER, REGDATE, KIND
+      FROM PRODUCT
+      WHERE deleted = '0'
+      <if test="word != ''">
+            <choose>
+               <when test="col == 'all'">
+                  and ( name like '%'||#{ word }||'%' or kind like '%'||#{ word }||'%' or content like '%'||#{ word }||'%' )
+               </when>
+               <when test="col == 'name'">
+                  and name like '%'||#{ word }||'%'
+               </when>
+                <when test="col == 'kind'">
+                  and kind like '%'||#{ word }||'%'
+               </when>              
+               <when test="col == 'content'">
+                  and content like '%'||#{ word }||'%'
+               </when>
+            </choose>
+         </if>
+       order by productNo DESC
+   </select> 
+	
+	<!-- **************************************************** -->
+	
+	<!-- insert가 완료된 후 keyColumn(uploadNo)의 값을 vo의 keyProperty(uploadNo)에 저장 -->
+	<insert id="insertProduct" parameterType="Product"
+			useGeneratedKeys="true" keyColumn="productNo" keyProperty="productNo">
+		INSERT INTO PRODUCT (PRODUCTNO, UPLOADER, CONTENT, NAME, PRICE, KIND)
+		VALUES (PRODUCT_SEQUENCE.NEXTVAL, #{ uploader }, #{ content }, #{ name }, #{ price }, #{ kind })
+	</insert>
+	
+	
+	<insert id="insertProduct2" parameterType="Product">
+		<selectKey keyProperty="productNo" order="AFTER" resultType="int">
+			SELECT PRODUCT_SEQUENCE.CURRVAL FROM DUAL
+		</selectKey>
+		INSERT INTO PRODUCT (PRODUCTNO, UPLOADER, CONTENT, NAME, PRICE, KIND)
+		VALUES (PRODUCT_SEQUENCE.NEXTVAL, #{ uploader }, #{ content }, #{ name }, #{ price }, #{ kind })
+	</insert>
+	
+	<insert id="insertProductImg" parameterType="ProductImg">
+		INSERT INTO PRODUCTIMG (
+			PRODUCTIMGNO
+			, PRODUCTNO
+			, SAVEDFILENAME
+			, USERFILENAME
+		)
+		VALUES (
+			PRODUCTIMG_SEQUENCE.NEXTVAL
+			, #{ productNo }
+			, #{ savedFileName }
+			, #{ userFileName }
+		)
+	</insert>
+	
+  	<update id="deleteProduct" parameterType="int">
+		UPDATE PRODUCT 
+		SET DELETED = '1'
+		WHERE PRODUCTNO = #{ productNo }
+	</update>
+	
+	<update id="updateCount" parameterType="int">
+		UPDATE PRODUCT 
+		SET READCOUNT = READCOUNT+1
+		WHERE PRODUCTNO = #{ productNo }
+	</update>
+	
+	
+ 	<delete id="deleteProductImg" parameterType="int">
+		DELETE FROM PRODUCTIMG
+		WHERE PRODUCTIMGNO = #{ productImgNo }
+	</delete> 
+	
+	<update id="updateProduct" parameterType="PRODUCT">
+		UPDATE PRODUCT
+		SET NAME = #{ name }, PRICE = #{ price }, KIND = #{ kind }, CONTENT = #{ content }
+		WHERE PRODUCTNO = #{ productNo }
+	</update>  
+	
+</mapper>

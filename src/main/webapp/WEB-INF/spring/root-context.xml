@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+						http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd
+						http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd
+						http://www.springframework.org/schema/jee https://www.springframework.org/schema/jee/spring-jee.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location" value="classpath:env.properties" />
+	</bean>
+	
+	<!-- Apache Commons DBCP -->
+	<bean id="dataSource"
+		  class="org.apache.commons.dbcp2.BasicDataSource">
+		<property name="driverClassName" value="${ds.driver}" />
+		<property name="url" value="${ds.url}" />
+		<property name="username" value="${ds.username}" />
+		<property name="password" value="${ds.password}" />
+		<property name="maxIdle" value="10" />
+		<property name="maxTotal" value="20" />
+		<property name="maxWaitMillis" value="-1" />
+	</bean>	
+	
+	<bean id="sqlSessionFactory"
+		  class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:mybatis-config.xml" />
+	</bean>
+	
+	<bean id="sqlSessionTemplate"
+		  class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg ref="sqlSessionFactory" />
+	</bean>
+	
+	<!-- Member -->
+	<bean id="memberRep" class="com.catwebsite.repository.MemberRepImpl">
+		<property name="sessionTemplate" ref="sqlSessionTemplate" />
+		<property name="memberMapper" ref="memberMapper" />
+	</bean>
+	
+	
+	<bean id="memberService" class="com.catwebsite.service.MemberServiceImpl">
+		<property name="memberRep" ref="memberRep" />
+	</bean>
+	
+	
+	<bean id="memberMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.catwebsite.mapper.MemberMapper" />
+		<property name="sqlSessionTemplate" ref="sqlSessionTemplate" />
+	</bean>	
+	
+
+	
+	<!-- Cat -->
+	<bean id="catRep" class="com.catwebsite.repository.CatRepImpl">
+		<property name="sessionTemplate" ref="sqlSessionTemplate" />
+		<property name="catMapper" ref="catMapper" />
+	</bean>
+	
+	<bean id="catService" class="com.catwebsite.service.CatServiceImpl">
+		<property name="catRep" ref="catRep" />
+	</bean>
+	
+	<bean id="catMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.catwebsite.mapper.CatMapper" />
+		<property name="sqlSessionTemplate" ref="sqlSessionTemplate" />
+	</bean>	
+	
+	
+	
+	
+	<!-- Product -->
+	<bean id="productRep" class="com.catwebsite.repository.ProductRepImpl">
+		<property name="sessionTemplate" ref="sqlSessionTemplate" />
+		<property name="productMapper" ref="productMapper" />
+	</bean>
+
+	
+	<bean id="productService" class="com.catwebsite.service.ProductServiceImpl">
+		<property name="productRep" ref="productRep" />
+	</bean>
+	
+	
+	<bean id="productMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.catwebsite.mapper.ProductMapper" />
+		<property name="sqlSessionTemplate" ref="sqlSessionTemplate" />
+	</bean>	
+	
+	
+	
+	
+	
+	<!-- Question -->
+	<bean id="questionService" class="com.catwebsite.service.QuestionServiceImpl">
+		<property name="questionRep" ref="questionRep" />
+	</bean>
+
+	<bean id="questionRep" class="com.catwebsite.repository.QuestionRepImpl">
+		<property name="sessionTemplate" ref="sqlSessionTemplate" />
+		<property name="questionMapper" ref="questionMapper" />
+	</bean>
+	
+	
+	<bean id="questionMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.catwebsite.mapper.QuestionMapper" />
+		<property name="sqlSessionTemplate" ref="sqlSessionTemplate" />  
+	</bean>
+	
+	
+	<!-- Market -->
+	
+	<bean id="marketService" class="com.catwebsite.service.MarketServiceImpl">
+		<property name="marketRep" ref="marketRep" />
+	</bean>
+
+	<bean id="marketRep" class="com.catwebsite.repository.MarketRepImpl">
+		<property name="sessionTemplate" ref="sqlSessionTemplate" />
+		<property name="marketMapper" ref="marketMapper" />
+	</bean>
+	
+	
+	<bean id="marketMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.catwebsite.mapper.MarketMapper" />
+		<property name="sqlSessionTemplate" ref="sqlSessionTemplate" />  
+	</bean>	
+		<!-- Review -->
+	<bean id="reviewService" class="com.catwebsite.service.ReviewServiceImpl">
+		<property name="reviewRep" ref="reviewRep" />
+	</bean>
+
+	<bean id="reviewRep" class="com.catwebsite.repository.ReviewRepImpl">
+		<property name="sessionTemplate" ref="sqlSessionTemplate" />
+		<property name="reviewMapper" ref="reviewMapper" />
+	</bean>
+	
+	
+	<bean id="reviewMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.catwebsite.mapper.ReviewMapper" />
+		<property name="sqlSessionTemplate" ref="sqlSessionTemplate" />  
+	</bean>
+	
+	<!-- cart -->
+	
+	<bean id="cartService" class="com.catwebsite.service.CartServiceImpl">
+		<property name="cartRep" ref="cartRep" />
+	</bean>
+
+	<bean id="cartRep" class="com.catwebsite.repository.CartRepImpl">
+		<property name="sessionTemplate" ref="sqlSessionTemplate" />
+		<property name="cartMapper" ref="cartMapper" />
+	</bean>
+	
+	
+	<bean id="cartMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.catwebsite.mapper.CartMapper" />
+		<property name="sqlSessionTemplate" ref="sqlSessionTemplate" />  
+	</bean>
+
+	
+</beans>

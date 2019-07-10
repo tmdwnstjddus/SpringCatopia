@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.catwebsite.mapper.MarketMapper">
+
+	<select id="selectMarkets" resultType="Market">
+		SELECT mkboardNo, Category, mkTitle, memberId, regDate
+		FROM MARKET
+		WHERE deleted = '0'
+		ORDER BY mkboardNo DESC
+	</select>
+	
+	<select id="selectMarketByMkboardNo" 
+	
+		parameterType="int" resultType="Market">
+		SELECT mkboardNo, Category, mkTitle, memberId, regDate, mkContent, mkreadCount 
+		FROM MARKET
+		WHERE MKBOARDNO = #{ mkboardNo } AND DELETED = '0'
+	</select>
+	
+	<select id="selectMarketFilesByMkboardNo"
+		parameterType="int" resultType="MarketFile">
+		SELECT marketFileNo, mkboardNo, savedFileName, userFileName, downloadCount 
+		FROM MARKETFILE
+		WHERE MKBOARDNO = #{ mkboardNo }
+	</select>
+	
+	<select id="selectMarketFileByMarketFileNo"
+		parameterType="int" resultType="MarketFile">
+		SELECT marketFileNo, mkboardNo, savedFileName, userFileName, downloadCount 
+		FROM MARKETFILE
+		WHERE MARKETFILENO = #{ marketFileNo }
+	</select>
+	
+	<!-- **************************************************** -->
+	
+	<!-- insert가 완료된 후 keyColumn(mkboardNo)의 값을 vo의 keyProperty(mkboardNo)에 저장 -->
+	<insert id="insertMarket" parameterType="Market"
+			useGeneratedKeys="true" keyColumn="mkboardNo" keyProperty="mkboardNo">
+		INSERT INTO MARKET (MKBOARDNO, CATEGORY, MKTITLE, MEMBERID, MKCONTENT)
+		VALUES (MARKET_SEQUENCE.NEXTVAL, #{category}, #{ mkTitle }, #{ memberId }, #{ mkContent })
+	</insert>
+	
+	<!-- insert가 완료된 후 selectKey의 SQL을 실행해서 vo의 MarketNo에 값을 저장 -->
+	<insert id="insertMarket2" parameterType="Market">
+		<selectKey keyProperty="mkboardNo" order="AFTER" resultType="int">
+			SELECT MARKET_SEQUENCE.CURRVAL FROM DUAL
+		</selectKey>
+		INSERT INTO MARKET (MKBOARDNO, CATEGORY, MKTITLE, MEMBERID, MKCONTENT)
+		VALUES (MARKET_SEQUENCE.NEXTVAL, #{category}, #{ mkTitle }, #{ memberId }, #{ mkContent })
+	</insert> 
+	
+	<insert id="insertMarketFile" parameterType="MarketFile">
+		INSERT INTO MARKETFILE (
+			MARKETFILENO
+			, MKBOARDNO
+			, SAVEDFILENAME
+			, USERFILENAME
+		)
+		VALUES (
+			MARKETFILE_SEQUENCE.NEXTVAL
+			, #{ mkboardNo }
+			, #{ savedFileName }
+			, #{ userFileName }
+		)
+	</insert>
+	
+	<update id="deleteMarket" parameterType="int">
+		UPDATE MARKET 
+		SET DELETED = '1'
+		WHERE MKBOARDNO = #{ mkboardNo }
+	</update>
+	
+	<delete id="deleteMarketFile" parameterType="int">
+		DELETE FROM MARKETFILE
+		WHERE MARKETFILENO = #{ marketFileNo }
+	</delete>
+	
+	<update id="updateMarket" parameterType="Market">
+		UPDATE MARKET
+		SET MKTITLE = #{ mkTitle }, MKCONTENT = #{ mkContent }
+		WHERE MKBOARDNO = #{ mkboardNo }
+	</update>
+	 
+	<!-- ############################################################# -->
+	
+	<insert id="insertComment" parameterType="MarketComment">
+		INSERT INTO MARKETCOMMENT
+		(
+			COMMENTNO, 
+			MKBOARDNO, 
+			MEMBERID, 
+			CONTENT, 
+			GROUPNO, 
+			STEP, 
+			DEPTH
+		)
+		VALUES
+		(
+			MARKETCOMMENT_SEQUENCE.NEXTVAL, 
+			#{ mkboardNo }, 
+			#{ memberId }, 
+			#{ content },
+			MARKETCOMMENT_SEQUENCE.CURRVAL,
+			1,
+			0
+		)	
+	</insert>
+	
+	<update id="updateComment" parameterType="MarketComment">
+		UPDATE MARKETCOMMENT
+		SET CONTENT = #{ content }
+		WHERE COMMENTNO = #{ commentNo }
+	</update>
+	
+	<delete id="deleteComment" parameterType="int">
+		DELETE FROM MARKETCOMMENT			
+		WHERE COMMENTNO = #{ commentNo }
+	</delete>
+	
+	<select id="selectCommentsByMkboardNo" 
+		parameterType="int" resultType="MarketComment">
+		SELECT COMMENTNO, MKBOARDNO, MEMBERID, REGDATE, CONTENT, GROUPNO, STEP, DEPTH 
+		FROM MARKETCOMMENT 
+		WHERE MKBOARDNO = #{ mkboardNo } ORDER BY GROUPNO DESC, STEP ASC 
+	</select>
+	
+	<select id="selectCommentsByMkboardNo2" 
+		parameterType="int" resultType="MarketComment">
+		SELECT COMMENTNO, MKBOARDNO, MEMBERID, CONTENT, REGDATE 
+		FROM MARKETCOMMENT 
+		WHERE MKBOARDNO = #{ mkboardNo } ORDER BY COMMENTNO DESC
+	</select>
+	
+	<select id="selectCommentByCommentNo" 
+		parameterType="int" resultType="MarketComment">
+		SELECT COMMENTNO, MKBOARDNO, MEMBERID, CONTENT, REGDATE, GROUPNO, STEP, DEPTH 
+		FROM MARKETCOMMENT 
+		WHERE COMMENTNO = #{ mkboardNo }
+	</select>
+	
+	<update id="updateCommentStep" parameterType="MarketComment">
+		UPDATE MARKETCOMMENT
+		SET STEP = STEP + 1
+		WHERE GROUPNO = #{ groupNo } AND STEP <![CDATA[>]]> #{ step }
+	</update>
+	
+	<insert id="insertRecomment" parameterType="MarketComment">
+		INSERT INTO MARKETCOMMENT
+		(
+			COMMENTNO, 
+			MKBOARDNO, 
+			MEMBERID, 
+			CONTENT, 
+			GROUPNO, 
+			STEP, 
+			DEPTH
+		)
+		VALUES
+		(
+			MARKETCOMMENT_SEQUENCE.NEXTVAL, 
+			#{ mkboardNo },
+			#{ memberId },
+			#{ content },
+			#{ groupNo },
+			#{ step },
+			#{ depth }
+		)	
+	</insert>
+	
+		<select id="selectMarketlist" parameterType="hashmap" resultType="com.catwebsite.vo.Market">
+		SELECT mkboardNo, category, mkTitle, memberId, regDate
+		FROM MARKET
+		WHERE deleted = '0'		
+		<if test='category != "all"'>
+    		AND  category = #{category}
+  		</if>
+		ORDER BY mkboardNo DESC
+	</select>
+	
+	
+	
+</mapper>
+
+
+ 
+
+
+
+
+
+
+
+ 
